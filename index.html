@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moniteur Système Cyberpunk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0A1128; /* Very dark blue, almost black */
+            background-image: url('https://i.imgur.com/v64TBU9.png'); /* Your Cyberpunk image */
+            background-size: cover;
+            background-position: center; /* Center the background image */
+            background-attachment: fixed;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #E0FBFC; /* Light cyan for general text */
+        }
+        .container {
+            background-color: rgba(27, 38, 59, 0.9); /* Slightly lighter dark blue with transparency */
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.3); /* Stronger dark shadow */
+            padding: 2.5rem; /* More padding */
+            width: 100%;
+            max-width: 28rem; /* Max width for better readability */
+            text-align: center;
+            border: 1px solid #4A4E69; /* Dark grey/blue subtle border */
+            backdrop-filter: blur(5px); /* Add a subtle blur effect to the background behind the container */
+        }
+        h1 {
+            color: #A7D9FC; /* Vibrant light blue/cyan for heading */
+            margin-bottom: 2rem; /* More space below heading */
+            text-shadow: 0 0 8px rgba(167, 217, 252, 0.5); /* Subtle glow effect */
+        }
+        button {
+            transition: all 0.2s ease-in-out;
+            transform: translateY(0);
+            display: flex; /* Flexbox for icon and text alignment */
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem; /* Space between icon and text */
+            border: 1px solid; /* Add border for cyberpunk look */
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(0, 119, 182, 0.7); /* Blue glow on hover */
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        input[type="text"] {
+            transition: all 0.2s ease-in-out;
+            background-color: #2C3E50; /* Darker input background */
+            color: #E0FBFC; /* Light text color for input */
+            border-color: #4A4E69; /* Darker border */
+        }
+        input[type="text"]::placeholder {
+            color: #A0AEC0; /* Lighter placeholder text */
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00B4D8; /* Bright cyan border on focus */
+            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.5); /* Bright cyan glow on focus */
+        }
+        .button-icon {
+            width: 1.5rem; /* Icon size */
+            height: 1.5rem;
+            filter: brightness(1.5) drop-shadow(0 0 5px rgba(255, 255, 255, 0.5)); /* Make icons brighter with a subtle glow */
+        }
+    </style>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen p-4">
+
+    <div class="container bg-gray-800 p-8 rounded-2xl shadow-xl max-w-sm mx-auto">
+        <h1 class="text-3xl font-bold mb-8">Moniteur Système</h1>
+
+        <div class="space-y-4 mb-6">
+            <button onclick="startUpdate('ram')"
+                    class="w-full bg-blue-800 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-md hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-700 focus:ring-opacity-75 border-blue-600">
+                <img src="https://placehold.co/24x24/0077B6/000000?text=RAM" alt="Icône RAM" class="button-icon">
+                Afficher RAM (Temps Réel)
+            </button>
+            <button onclick="startUpdate('cpu')"
+                    class="w-full bg-cyan-700 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-md hover:bg-cyan-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:ring-opacity-75 border-cyan-500">
+                <img src="https://placehold.co/24x24/00B4D8/000000?text=CPU" alt="Icône CPU" class="button-icon">
+                Afficher CPU (Temps Réel)
+            </button>
+            <button onclick="stopUpdate()"
+                    class="w-full bg-pink-700 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-md hover:bg-pink-800 focus:outline-none focus:ring-2 focus:ring-pink-600 focus:ring-opacity-75 border-pink-500">
+                <img src="https://placehold.co/24x24/EF476F/000000?text=STOP" alt="Icône Stop" class="button-icon">
+                Arrêter Mise à Jour
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <input type="text" id="messageText" placeholder="Votre message pour l'écran LCD"
+                   class="w-full p-3 border rounded-xl focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-gray-200 placeholder-gray-400 bg-gray-700 border-gray-600">
+            <button onclick="sendMessage()"
+                    class="w-full bg-gray-700 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:ring-opacity-75 border-gray-600">
+                <img src="https://placehold.co/24x24/A0AEC0/000000?text=MSG" alt="Icône Message" class="button-icon">
+                Afficher Message
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let updateIntervalId = null;
+        let currentInfoType = null;
+
+        /**
+         * Starts the periodic update for a given information type (RAM or CPU).
+         * @param {string} infoType - The type of information to display ('ram' or 'cpu').
+         */
+        function startUpdate(infoType) {
+            currentInfoType = infoType;
+            if (updateIntervalId !== null) {
+                // If an interval is already running, clear it before starting a new one
+                clearInterval(updateIntervalId);
+            }
+            // Start a new interval to fetch data every 1000ms (1 second)
+            updateIntervalId = setInterval(fetchData, 1000);
+            console.log(`Mise à jour en temps réel démarrée pour: ${infoType}`);
+        }
+
+        /**
+         * Stops the periodic data update.
+         */
+        function stopUpdate() {
+            if (updateIntervalId !== null) {
+                clearInterval(updateIntervalId);
+                updateIntervalId = null;
+                currentInfoType = null;
+                console.log("Mise à jour en temps réel arrêtée.");
+            }
+        }
+
+        /**
+         * Fetches data from the Flask server based on the currentInfoType.
+         * This function is called repeatedly by setInterval.
+         */
+        async function fetchData() {
+            if (currentInfoType) {
+                try {
+                    const response = await fetch(`/${currentInfoType}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.text(); // Assuming Flask returns text like "RAM sent"
+                    console.log(`Données ${currentInfoType} envoyées: ${data}`);
+                } catch (error) {
+                    console.error(`Erreur lors de la récupération des données ${currentInfoType}:`, error);
+                }
+            }
+        }
+
+        /**
+         * Sends a custom message to the Arduino via the Flask server.
+         */
+        async function sendMessage() {
+            const message = document.getElementById('messageText').value;
+            if (message.trim() === "") {
+                // In a real application, use a custom modal instead of alert()
+                alert("Veuillez entrer un message."); 
+                return;
+            }
+            try {
+                const response = await fetch(`/message/${encodeURIComponent(message)}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.text();
+                console.log(`Message envoyé: ${data}`);
+                document.getElementById('messageText').value = ''; // Clear input after sending
+            } catch (error) {
+                console.error("Erreur lors de l'envoi du message:", error);
+            }
+        }
+    </script>
+</body>
+</html>
