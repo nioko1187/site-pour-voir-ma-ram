@@ -10,7 +10,7 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0A1128; /* Very dark blue, almost black */
-            background-image: url('https://i.imgur.com/v64TBU9.png'); /* Your Cyberpunk image */
+            background-image: url('Cyberpunk 2077.jpg'); /* Your Cyberpunk image */
             background-size: cover;
             background-position: center; /* Center the background image */
             background-attachment: fixed;
@@ -98,6 +98,14 @@
             </button>
         </div>
 
+        <div class="mb-6">
+            <button onclick="fetch(`${backendBaseUrl}/next`)"
+                    class="w-full bg-purple-800 text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-md hover:bg-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-700 focus:ring-opacity-75 border-purple-600">
+                <img src="https://placehold.co/24x24/7B2CBF/000000?text=NEXT" alt="Icône Suivant" class="button-icon">
+                Suivant (Arduino)
+            </button>
+        </div>
+
         <div class="space-y-4">
             <input type="text" id="messageText" placeholder="Votre message pour l'écran LCD"
                    class="w-full p-3 border rounded-xl focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 text-gray-200 placeholder-gray-400 bg-gray-700 border-gray-600">
@@ -110,6 +118,14 @@
     </div>
 
     <script>
+        // *** IMPORTANT : REMPLACEZ CETTE URL PAR L'ADRESSE PUBLIQUE DE VOTRE SERVEUR FLASK ***
+        // Si votre Flask est sur le même PC et accessible localement (pour les tests), utilisez:
+        // const backendBaseUrl = 'http://127.0.0.1:5000';
+        // Si votre Flask est accessible depuis internet (après port forwarding ou déploiement sur un service):
+        const backendBaseUrl = 'http://VOTRE_ADRESSE_IP_PUBLIQUE:5000'; // Ex: 'http://203.0.113.42:5000'
+        // Ou si vous utilisez un service comme PythonAnywhere:
+        // const backendBaseUrl = 'https://votre_nom_utilisateur.pythonanywhere.com';
+
         let updateIntervalId = null;
         let currentInfoType = null;
 
@@ -147,11 +163,12 @@
         async function fetchData() {
             if (currentInfoType) {
                 try {
-                    const response = await fetch(`/${currentInfoType}`);
+                    // Utilise backendBaseUrl pour la requête
+                    const response = await fetch(`${backendBaseUrl}/${currentInfoType}`);
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                    const data = await response.text(); // Assuming Flask returns text like "RAM sent"
+                    const data = await response.text();
                     console.log(`Données ${currentInfoType} envoyées: ${data}`);
                 } catch (error) {
                     console.error(`Erreur lors de la récupération des données ${currentInfoType}:`, error);
@@ -165,12 +182,12 @@
         async function sendMessage() {
             const message = document.getElementById('messageText').value;
             if (message.trim() === "") {
-                // In a real application, use a custom modal instead of alert()
-                alert("Veuillez entrer un message."); 
+                alert("Veuillez entrer un message."); // Use a custom modal in a real app, not alert()
                 return;
             }
             try {
-                const response = await fetch(`/message/${encodeURIComponent(message)}`);
+                // Utilise backendBaseUrl pour la requête
+                const response = await fetch(`${backendBaseUrl}/message/${encodeURIComponent(message)}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
